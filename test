@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ $# -eq 1 && ($1 == -e || $1 == --emul) ]]; then
+    clear
+    make -s floppyA && qemu-system-x86_64 -boot a -fda floppyA -monitor stdio && clear
+    make fclean
+elif [[ $# -gt 1 && $# -lt 4 && ($1 == -r || $1 == --real) ]]; then
+    clear
+    sudo fdisk $2 < .format_cmd && clear
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+	exit $rc
+    fi
+    make -s usb_boot $2
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+	make fclean
+	exit $rc
+    fi
+    sleep 3
+    clear
+    make fclean
+    if [[ $# -eq 3 && ($3 == -n || $3 == --now) ]]; then
+	reboot
+    fi
+else
+    echo usage: test \<mode\> [device] [option]
+fi
